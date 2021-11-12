@@ -21,94 +21,50 @@ void EnableInterrupts(void);    // Defined in startup.s
 void DisableInterrupts(void);   // Defined in startup.s
 void WaitForInterrupt(void);    // Defined in startup.s
 
+#define led_red PIN_F1
+#define led_blue PIN_F2
+#define led_green PIN_F3
+
+
+void turnLeft90(PWM_t servo, PWM_t servo2) {
+
+    ServoSetSpeed(servo, 100);      //left motor turns CW
+    ServoSetSpeed(servo2, 100);     //right motor turns CW
+    DelayMillisec(5000);
+}
+
+void turnRight90(PWM_t servo, PWM_t servo2) {
+
+    ServoSetSpeed(servo, -100);      //left motor turns CCW
+    ServoSetSpeed(servo2, -100);     //right motor turns CCW
+    DelayMillisec(5000);
+}
 void moveStop(PWM_t servo, PWM_t servo2) {
-        /* old stop moving code */
-        /* Make the servo stall for 5 seconds. This should be not moving.
-                           To tune your servo, you want to turn the front screw until the servo
-                           is not moving when the light is off, and to move when the light is
-                           on. */
-
-                       /* GPIOSetBit(PIN_F1, 0);
-                        GPIOSetBit(PIN_F2, 0);
-                        ServoSetSpeed(servo, 0);
-                        ServoSetSpeed(servo2, 0);
-                        DelayMillisec(5000); */
-        ServoSetSpeed(servo, 0);
-        ServoSetSpeed(servo2, 0);
-//        DelayMillisec(1000);
-
-    }
+    ServoSetSpeed(servo, 0);
+    ServoSetSpeed(servo2, 0);
+    DelayMillisec(5000);
+}
 void moveForward(PWM_t servo, PWM_t servo2) {
-        /* old forward code
-         * // Make the servo go forward for 5 seconds.
-                    GPIOSetBit(PIN_F1, 0);
-                    GPIOSetBit(PIN_F2, 1);
-                    ServoSetSpeed(servo, -20);
-                    ServoSetSpeed(servo2, 20);
-                    DelayMillisec(2500);
-                    ServoSetSpeed(servo, -100);
-                    ServoSetSpeed(servo2, 100);
-                    DelayMillisec(2500);*/
-        ServoSetSpeed(servo, -100); //left motor turns CCW
-        ServoSetSpeed(servo2, 100); //right motor turns CW
-//        DelayMillisec(1000);
-
+    ServoSetSpeed(servo, -100);     //left motor turns CCW
+    ServoSetSpeed(servo2, 90);      //right motor turns CW
 }
 void moveBackward(PWM_t servo, PWM_t servo2) {
-        /* old backward code */
-        /* Make the servo go backward for 5 seconds. */
-    /*    GPIOSetBit(PIN_F1, 1);
-        GPIOSetBit(PIN_F2, 0);
-        ServoSetSpeed(servo, 100);      //servo turns CW
-        ServoSetSpeed(servo2, -100);    //servo2 turns CCW
-        DelayMillisec(2500);
-        ServoSetSpeed(servo, 20);
-        ServoSetSpeed(servo2, -20);
-        DelayMillisec(2500); */
+    ServoSetSpeed(servo, 100);      //left motor turns CW
+    ServoSetSpeed(servo2, -100);    //right motor turns CCW
+}
 
-        ServoSetSpeed(servo, 100);  //left motor turns CW
-        ServoSetSpeed(servo2, -100);//right motor turns CCW
-//        DelayMillisec(1000);
+void turnLeft(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, 100);      //left motor turns CW
+    ServoSetSpeed(servo2, 80);     //right motor turns CW
+    DelayMillisec(1000);
+}
 
-    }
+void turnRight(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, -100);     //left motor turns CCW
+    ServoSetSpeed(servo2, -80);    //right motor turns CCW
+    DelayMillisec(1000);
+}
 
-    void turnLeft(PWM_t servo, PWM_t servo2) {
-        /* old turn left code */
-        /* Make the servo turn left for 5 seconds. */
-    /*    GPIOSetBit(PIN_F1, 1);
-        GPIOSetBit(PIN_F2, 0);
-        ServoSetSpeed(servo, 100);      //servo turns CW
-        ServoSetSpeed(servo2, 100);     //servo turns CW
-        DelayMillisec(2500);
-        ServoSetSpeed(servo, 20);
-        ServoSetSpeed(servo2, 20);
-        DelayMillisec(2500); */
-
-        ServoSetSpeed(servo, 100);      //left motor turns CW
-        ServoSetSpeed(servo2, 100);     //right motor turns CW
-//        DelayMillisec(1000);
-
-    }
-
-    void turnRight(PWM_t servo, PWM_t servo2) {
-        /* old turn right code */
-        /* Make the servo turn right for 5 seconds. */
-    /*    GPIOSetBit(PIN_F1, 1);
-        GPIOSetBit(PIN_F2, 0);
-        ServoSetSpeed(servo, -100);      //servo turns CCW
-        ServoSetSpeed(servo2, -100);     //servo turns CCW
-        DelayMillisec(2500);
-        ServoSetSpeed(servo, -20);
-        ServoSetSpeed(servo2, -20);
-        DelayMillisec(2500); */
-
-        ServoSetSpeed(servo, -20);      //left motor turns CCW
-        ServoSetSpeed(servo2, -20);     //right motor turns CCW
-        ServoSetSpeed(servo, -100);      //left motor turns CCW
-        ServoSetSpeed(servo2, -100);     //right motor turns CCW
-//        DelayMillisec(1000);
-
-    }
 int main(void) {
     PLLInit(BUS_80_MHZ);
     DisableInterrupts();
@@ -126,43 +82,12 @@ int main(void) {
     /* Initialization of ADC. */
         LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
-    DelayInit();
-//
-//    /* Red onboard LED. */
-//    GPIOConfig_t PF1 = {
-//        .pin=PIN_F1,
-//        .isOutput=true;
-//    };
-//    GPIOInit(PF1);
-//    /* Blue onboard LED. */
-//    GPIOConfig_t PF2 = {
-//        .pin=PIN_F2,
-//        .isOutput=true
-//    };
-//    GPIOInit(PF2);
-//    /* Initialize PF3 as a GPIO output. This is associated with the GREEN led on
-//       the TM4C. */
-//    GPIOConfig_t PF3Config = {
-//        PIN_F3,
-//        GPIO_PULL_DOWN,
-//        true
-//    };
-
-
-
-
-    /* Initialize PF1 as a GPIO output. This is associated with the RED led on
-       the TM4C. */
+    /* Red onboard LED. */
     GPIOConfig_t PF1Config = {
-        .pin=PIN_F1,
-        .pull=GPIO_PULL_DOWN,
-        .isOutput=true,
-        .alternateFunction=0,
-        .isAnalog=false,
-        .drive=GPIO_DRIVE_2MA,
-        .enableSlew=false
+        PIN_F1,
+        GPIO_PULL_DOWN,
+        true
     };
-
     /* Initialize PF2 as a GPIO output. This is associated with the BLUE led on
        the TM4C. */
     GPIOConfig_t PF2Config = {
@@ -182,7 +107,6 @@ int main(void) {
     GPIOInit(PF2Config);
     GPIOInit(PF3Config);
 
-    /* Warning to users who have epilepsy - bright flashing colors. */
     //left motor
     ServoConfig_t servo1Config = {
         .pin=PIN_B6,
@@ -197,25 +121,7 @@ int main(void) {
         };
     PWM_t servo2 = ServoInit(servo2Config);
 
-    /* Put all of these functions in a separate file for cleanliness or smtn*/
-
-
-//    void moveForward(PWM_t servo, PWM_t servo2) {
-//        /* old forward code
-//         * // Make the servo go forward for 5 seconds.
-//                    GPIOSetBit(PIN_F1, 0);
-//                    GPIOSetBit(PIN_F2, 1);
-//                    ServoSetSpeed(servo, -20);
-//                    ServoSetSpeed(servo2, 20);
-//                    DelayMillisec(2500);
-//                    ServoSetSpeed(servo, -100);
-//                    ServoSetSpeed(servo2, 100);
-//                    DelayMillisec(2500);*/
-//        ServoSetSpeed(servo, -100); //left motor turns CCW
-//        ServoSetSpeed(servo2, 100); //right motor turns CW
-//        return;
-//    }
-
+    DelayInit();
     EnableInterrupts();
     while(1) {
         /* Read from the line sensor. */
@@ -230,30 +136,67 @@ int main(void) {
             avgSide += sensor.values[i] << i;
         }
 
+        /* UNCOMMENT THIS CODE LATER *********** */
+        //if all sensors on the left are true, turn left 90 degrees
+//        if (sensor.values[7] && sensor.values[6] && sensor.values[5] && sensor.values[4]) {
+//            GPIOSetBit(led_red, 0);
+//            GPIOSetBit(led_blue, 0);
+//            GPIOSetBit(led_green, 1);
+//            turnLeft90(servo, servo2);
+//        }
+//
+//        //if all sensors on the right are true, turn right 90 degrees
+//        if (sensor.values[3] && sensor.values[2] && sensor.values[1] && sensor.values[0]) {
+//            GPIOSetBit(led_red, 0);
+//            GPIOSetBit(led_blue, 1);
+//            GPIOSetBit(led_green, 0);
+//            turnRight90(servo, servo2);
+//        }
+
         /* Turn on RED LED if sensor data is none across the board. */
         /* Move forward if there is no sensor data */
         if (avgSide == 0) {
-            GPIOSetBit(PIN_F1, 1);
-            GPIOSetBit(PIN_F2, 0);
-            GPIOSetBit(PIN_F3, 0);
-            moveForward(servo, servo2);
+            GPIOSetBit(led_red, 1);
+            GPIOSetBit(led_blue, 0);
+            GPIOSetBit(led_green, 0);
+//            moveForward(servo, servo2);
+            moveStop(servo, servo2);
         }
         /* Turn on GREEN LED if sensor data is tending towards the left side. */
         /* Turn left if sensor data is towards left side */
         else if (avgSide >= 0x10) {
-            GPIOSetBit(PIN_F1, 0);
-            GPIOSetBit(PIN_F2, 0);
-            GPIOSetBit(PIN_F3, 1);
+            GPIOSetBit(led_red, 0);
+            GPIOSetBit(led_blue, 0);
+            GPIOSetBit(led_green, 1);
             turnLeft(servo, servo2);
         }
         /* Turn on BLUE LED if sensor data is tending towards the right side. */
         /* Turn right if sensor data is towards right side */
         else {
-            GPIOSetBit(PIN_F1, 0);
-            GPIOSetBit(PIN_F2, 1);
-            GPIOSetBit(PIN_F3, 0);
+            GPIOSetBit(led_red, 0);
+            GPIOSetBit(led_blue, 1);
+            GPIOSetBit(led_green, 0);
             turnRight(servo, servo2);
         }
+
+          /* trying to figure out how long to delayto do 90 degree turn */
+
+//            //turn left 90
+//            ServoSetSpeed(servo, 100);      //left motor turns CW
+//            ServoSetSpeed(servo2, 100);     //right motor turns CW
+//            DelayMillisec(2500);
+//
+//            ServoSetSpeed(servo, 0);
+//            ServoSetSpeed(servo2, 0);
+//            DelayMillisec(10000);
+//
+//            //turn right 90
+//            ServoSetSpeed(servo, -100);      //left motor turns CCW
+//            ServoSetSpeed(servo2, -100);     //right motor turns CCW
+//            DelayMillisec(2500);
+//            ServoSetSpeed(servo, 0);
+//            ServoSetSpeed(servo2, 0);
+//            DelayMillisec(10000);
 
     }
 }
