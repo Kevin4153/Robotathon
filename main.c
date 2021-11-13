@@ -26,11 +26,42 @@ void WaitForInterrupt(void);    // Defined in startup.s
 #define led_green PIN_F3
 
 
+
+void moveStop(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, 0);
+    ServoSetSpeed(servo2, 0);
+    DelayMillisec(5000);
+}
+//one of the motors is weaker than the other, servo2 speed is less to compensate
+void moveForward(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, -100);     //left motor turns CCW
+    ServoSetSpeed(servo2, 90);      //right motor turns CW
+    DelayMillisec(1000);
+}
+void moveBackward(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, 100);      //left motor turns CW
+    ServoSetSpeed(servo2, -100);    //right motor turns CCW
+}
+
+//does a veering motion to the left
+void turnLeft(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, 100);      //left motor turns CW
+    ServoSetSpeed(servo2, 80);     //right motor turns CW
+    DelayMillisec(1000);
+}
+//does a veering motion to the right
+void turnRight(PWM_t servo, PWM_t servo2) {
+    ServoSetSpeed(servo, -100);     //left motor turns CCW
+    ServoSetSpeed(servo2, -80);    //right motor turns CCW
+    DelayMillisec(1000);
+}
 void turnLeft90(PWM_t servo, PWM_t servo2) {
 
     ServoSetSpeed(servo, 100);      //left motor turns CW
     ServoSetSpeed(servo2, 100);     //right motor turns CW
     DelayMillisec(5000);
+
+
 }
 
 void turnRight90(PWM_t servo, PWM_t servo2) {
@@ -38,31 +69,6 @@ void turnRight90(PWM_t servo, PWM_t servo2) {
     ServoSetSpeed(servo, -100);      //left motor turns CCW
     ServoSetSpeed(servo2, -100);     //right motor turns CCW
     DelayMillisec(5000);
-}
-void moveStop(PWM_t servo, PWM_t servo2) {
-    ServoSetSpeed(servo, 0);
-    ServoSetSpeed(servo2, 0);
-    DelayMillisec(5000);
-}
-void moveForward(PWM_t servo, PWM_t servo2) {
-    ServoSetSpeed(servo, -100);     //left motor turns CCW
-    ServoSetSpeed(servo2, 90);      //right motor turns CW
-}
-void moveBackward(PWM_t servo, PWM_t servo2) {
-    ServoSetSpeed(servo, 100);      //left motor turns CW
-    ServoSetSpeed(servo2, -100);    //right motor turns CCW
-}
-
-void turnLeft(PWM_t servo, PWM_t servo2) {
-    ServoSetSpeed(servo, 100);      //left motor turns CW
-    ServoSetSpeed(servo2, 80);     //right motor turns CW
-    DelayMillisec(1000);
-}
-
-void turnRight(PWM_t servo, PWM_t servo2) {
-    ServoSetSpeed(servo, -100);     //left motor turns CCW
-    ServoSetSpeed(servo2, -80);    //right motor turns CCW
-    DelayMillisec(1000);
 }
 
 int main(void) {
@@ -159,8 +165,8 @@ int main(void) {
             GPIOSetBit(led_red, 1);
             GPIOSetBit(led_blue, 0);
             GPIOSetBit(led_green, 0);
-//            moveForward(servo, servo2);
-            moveStop(servo, servo2);
+            moveForward(servo, servo2);
+//            moveStop(servo, servo2);
         }
         /* Turn on GREEN LED if sensor data is tending towards the left side. */
         /* Turn left if sensor data is towards left side */
