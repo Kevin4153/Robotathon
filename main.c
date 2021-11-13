@@ -35,8 +35,8 @@ void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // no led for stop
     GPIOSetBit(led_blue, 0);
     GPIOSetBit(led_green, 0);
-    ServoSetSpeed(servo, 0);
-    ServoSetSpeed(servo2, 0);
+    ServoSetSpeed(servo, 35);
+    ServoSetSpeed(servo2, 30);
     DelayMillisec(2000);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
@@ -62,8 +62,8 @@ void turnLeft(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // yellow led on for turning left
     GPIOSetBit(led_blue, 0);
     GPIOSetBit(led_green, 1);
-    ServoSetSpeed(servo, 100);      //left motor turns CW
-    ServoSetSpeed(servo2, 80);     //right motor turns CW
+    ServoSetSpeed(servo, 15);      //left motor turns CW
+    ServoSetSpeed(servo2, 100);     //right motor turns CW
     DelayMillisec(2000);
 }
 //does a veering motion to the right
@@ -72,7 +72,7 @@ void turnRight(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_blue, 1);
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, -100);     //left motor turns CCW
-    ServoSetSpeed(servo2, -80);    //right motor turns CCW
+    ServoSetSpeed(servo2, 67);    //right motor turns CCW
     DelayMillisec(2000);
 }
 void turnLeft90(PWM_t servo, PWM_t servo2) {
@@ -95,7 +95,7 @@ void turnRight90(PWM_t servo, PWM_t servo2) {
     DelayMillisec(4000);
 }
 
-void testMotorBehavior(PWM_t servo, PWM_t servo2){
+void testMotorBehavior(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
     int stage = 0;
     while(1){
         LineSensorGetBoolArray(&sensor, 2048);
@@ -188,7 +188,7 @@ int main(void) {
     EnableInterrupts();
 
     //************* test script for motor **************
-    testMotorBehavior(servo, servo2);    // comment this out as needed
+    testMotorBehavior(sensor, servo, servo2);    // comment this out as needed
     //**************************************************
 
     while(1) {
