@@ -37,7 +37,7 @@ void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, 35);
     ServoSetSpeed(servo2, 30);
-    DelayMillisec(1000);
+    DelayMillisec(200);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
 void moveForward(PWM_t servo, PWM_t servo2) {
@@ -62,20 +62,20 @@ void turnLeft(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // yellow led on for turning left
     GPIOSetBit(led_blue, 0);
     GPIOSetBit(led_green, 1);
-    ServoSetSpeed(servo, 18);      //left motor turns CW
-    ServoSetSpeed(servo2, 100);     //right motor turns CW
-//    DelayMillisec(2000);
-    DelayMillisec(200);
+    ServoSetSpeed(servo, 12);      //left motor turns CW
+    ServoSetSpeed(servo2, 77);     //right motor turns CW
+//    DelayMillisec(2000); // this delay is for testing veering motion
+    DelayMillisec(200); //use this delay for testing straight line tracking
 }
 //does a veering motion to the right
 void turnRight(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // led purple for veering right
     GPIOSetBit(led_blue, 1);
     GPIOSetBit(led_green, 0);
-    ServoSetSpeed(servo, -90);     //left motor turns CCW
+    ServoSetSpeed(servo, -85);     //left motor turns CCW
     ServoSetSpeed(servo2, 74);    //right motor turns CCW 70
-//    DelayMillisec(2000);
-    DelayMillisec(200);
+//    DelayMillisec(2000); //this delay is for testing veering motion
+    DelayMillisec(200); //use this delay for testing straight line tracking
 }
 void turnLeft90(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // led green for sharp left
@@ -116,22 +116,22 @@ void testMotorBehavior(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
      *      repeat
      */
         switch(stage){
-            case 0: moveStop(servo, servo2);
-            case 1: moveForward(servo, servo2);
-            case 2: moveBackward(servo, servo2);
-            case 3: turnLeft(servo, servo2);
-            case 4: turnRight(servo, servo2);
-            case 5: turnLeft90(servo, servo2);
-            case 6: turnRight90(servo, servo2);
+//            case 0: moveStop(servo, servo2);
+//            case 1: moveForward(servo, servo2);
+//            case 2: moveBackward(servo, servo2);
+//            case 3: turnLeft(servo, servo2);
+//            case 4: turnRight(servo, servo2);
+//            case 5: turnLeft90(servo, servo2);
+//            case 6: turnRight90(servo, servo2);
+
             //for just testing veering motion
-//              case 0: moveStop(servo, servo2);
-//              case 1: turnLeft(servo, servo2);
-//              case 2: moveStop(servo, servo2);
-//              case 3: turnRight(servo, servo2);
+              case 0: moveStop(servo, servo2);
+              case 1: turnLeft(servo, servo2);
+              case 2: turnRight(servo, servo2);
         }
-        stage %= 7; // 0 <= stage < 7
-        //for just testing veering motion
-//        stage %= 4;
+//        stage %= 7; // 0 <= stage < 7
+//        for just testing veering motion
+        stage %= 3;
     }
 }
 
@@ -216,7 +216,7 @@ int main(void) {
         }
 
         /* UNCOMMENT THIS CODE LATER *********** */
-        //if all sensors on the left are true, turn left 90 degrees
+//        if all sensors on the left are true, turn left 90 degrees
 //        if (sensor.values[7] && sensor.values[6] && sensor.values[5] && sensor.values[4]) {
 //            turnLeft90(servo, servo2);
 //            moveStop(servo, servo2);
