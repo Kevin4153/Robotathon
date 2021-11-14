@@ -37,7 +37,7 @@ void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, 35);
     ServoSetSpeed(servo2, 30);
-    DelayMillisec(2000);
+    DelayMillisec(1000);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
 void moveForward(PWM_t servo, PWM_t servo2) {
@@ -46,7 +46,7 @@ void moveForward(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, -100);     //left motor turns CCW
     ServoSetSpeed(servo2, 90);      //right motor turns CW
-    DelayMillisec(2000);
+    DelayMillisec(200);
 }
 void moveBackward(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // white led for moving backward
@@ -54,7 +54,7 @@ void moveBackward(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 1);
     ServoSetSpeed(servo, 100);      //left motor turns CW
     ServoSetSpeed(servo2, -100);    //right motor turns CCW
-    DelayMillisec(2000);
+    DelayMillisec(500);
 }
 
 //does a veering motion to the left
@@ -62,18 +62,20 @@ void turnLeft(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // yellow led on for turning left
     GPIOSetBit(led_blue, 0);
     GPIOSetBit(led_green, 1);
-    ServoSetSpeed(servo, 15);      //left motor turns CW
+    ServoSetSpeed(servo, 18);      //left motor turns CW
     ServoSetSpeed(servo2, 100);     //right motor turns CW
-    DelayMillisec(2000);
+//    DelayMillisec(2000);
+    DelayMillisec(200);
 }
 //does a veering motion to the right
 void turnRight(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // led purple for veering right
     GPIOSetBit(led_blue, 1);
     GPIOSetBit(led_green, 0);
-    ServoSetSpeed(servo, -100);     //left motor turns CCW
-    ServoSetSpeed(servo2, 67);    //right motor turns CCW
-    DelayMillisec(2000);
+    ServoSetSpeed(servo, -90);     //left motor turns CCW
+    ServoSetSpeed(servo2, 74);    //right motor turns CCW 70
+//    DelayMillisec(2000);
+    DelayMillisec(200);
 }
 void turnLeft90(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // led green for sharp left
@@ -81,9 +83,7 @@ void turnLeft90(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 1);
     ServoSetSpeed(servo, 100);      //left motor turns CW
     ServoSetSpeed(servo2, 100);     //right motor turns CW
-    DelayMillisec(4000);
-
-
+    DelayMillisec(520);
 }
 
 void turnRight90(PWM_t servo, PWM_t servo2) {
@@ -92,7 +92,7 @@ void turnRight90(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, -100);      //left motor turns CCW
     ServoSetSpeed(servo2, -100);     //right motor turns CCW
-    DelayMillisec(4000);
+    DelayMillisec(520);
 }
 
 void testMotorBehavior(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
@@ -123,8 +123,15 @@ void testMotorBehavior(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
             case 4: turnRight(servo, servo2);
             case 5: turnLeft90(servo, servo2);
             case 6: turnRight90(servo, servo2);
+            //for just testing veering motion
+//              case 0: moveStop(servo, servo2);
+//              case 1: turnLeft(servo, servo2);
+//              case 2: moveStop(servo, servo2);
+//              case 3: turnRight(servo, servo2);
         }
         stage %= 7; // 0 <= stage < 7
+        //for just testing veering motion
+//        stage %= 4;
     }
 }
 
@@ -188,8 +195,12 @@ int main(void) {
     EnableInterrupts();
 
     //************* test script for motor **************
-    testMotorBehavior(sensor, servo, servo2);    // comment this out as needed
+//    testMotorBehavior(sensor, servo, servo2);    // comment this out as needed
     //**************************************************
+
+    //wait a total of 5 seconds before starting
+    moveStop(servo, servo2);
+    DelayMillisec(3000);
 
     while(1) {
         /* Read from the line sensor. */
@@ -207,18 +218,16 @@ int main(void) {
         /* UNCOMMENT THIS CODE LATER *********** */
         //if all sensors on the left are true, turn left 90 degrees
 //        if (sensor.values[7] && sensor.values[6] && sensor.values[5] && sensor.values[4]) {
-//            GPIOSetBit(led_red, 0);
-//            GPIOSetBit(led_blue, 0);
-//            GPIOSetBit(led_green, 1);
 //            turnLeft90(servo, servo2);
+//            moveStop(servo, servo2);
+//            moveForward(servo, servo2);
 //        }
 //
 //        //if all sensors on the right are true, turn right 90 degrees
 //        if (sensor.values[3] && sensor.values[2] && sensor.values[1] && sensor.values[0]) {
-//            GPIOSetBit(led_red, 0);
-//            GPIOSetBit(led_blue, 1);
-//            GPIOSetBit(led_green, 0);
 //            turnRight90(servo, servo2);
+//            moveStop(servo, servo2);
+//            moveForward(servo, servo2);
 //        }
 
         /* Turn on RED LED if sensor data is none across the board. */
@@ -227,6 +236,9 @@ int main(void) {
             moveForward(servo, servo2);
 //            moveStop(servo, servo2);
         }
+        else if (sensor.values[3] && sensor.values[4]) {
+            moveForward(servo,servo2);
+        }
         /* Turn on GREEN LED if sensor data is tending towards the left side. */
         /* Turn left if sensor data is towards left side */
         else if (avgSide >= 0x10) {
@@ -234,28 +246,9 @@ int main(void) {
         }
         /* Turn on BLUE LED if sensor data is tending towards the right side. */
         /* Turn right if sensor data is towards right side */
-        else {
+        else if (avgSide <= 0x10) {
             turnRight(servo, servo2);
         }
-
-          /* trying to figure out how long to delayto do 90 degree turn */
-
-//            //turn left 90
-//            ServoSetSpeed(servo, 100);      //left motor turns CW
-//            ServoSetSpeed(servo2, 100);     //right motor turns CW
-//            DelayMillisec(2500);
-//
-//            ServoSetSpeed(servo, 0);
-//            ServoSetSpeed(servo2, 0);
-//            DelayMillisec(10000);
-//
-//            //turn right 90
-//            ServoSetSpeed(servo, -100);      //left motor turns CCW
-//            ServoSetSpeed(servo2, -100);     //right motor turns CCW
-//            DelayMillisec(2500);
-//            ServoSetSpeed(servo, 0);
-//            ServoSetSpeed(servo2, 0);
-//            DelayMillisec(10000);
 
     }
 }
