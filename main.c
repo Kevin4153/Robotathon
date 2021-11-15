@@ -37,7 +37,7 @@ void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, 35);
     ServoSetSpeed(servo2, 30);
-    DelayMillisec(200);
+    DelayMillisec(100);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
 void moveForward(PWM_t servo, PWM_t servo2) {
@@ -148,7 +148,12 @@ int main(void) {
     LineSensorConfig_t lineSensConfig = {
         .pins={AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7, AIN8},
         .numPins=8,
+        .repeatFrequency=20,
+        .isThresholded=true,
+        .threshold=2048 // This threshold corresponds to 2048 / 4095 * 3.3 V.
+        // Uses ADC Module 0, Sequencer 0, Timer 0A by default.
     };
+
     /* Initialization of ADC. */
         LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
@@ -198,9 +203,9 @@ int main(void) {
 //    testMotorBehavior(sensor, servo, servo2);    // comment this out as needed
     //**************************************************
 
-    //wait a total of 5 seconds before starting
-    moveStop(servo, servo2);
-    DelayMillisec(3000);
+//    //wait a total of 5 seconds before starting
+//    moveStop(servo, servo2);
+//    DelayMillisec(3000);
 
     while(1) {
         /* Read from the line sensor. */
@@ -217,18 +222,18 @@ int main(void) {
 
         /* UNCOMMENT THIS CODE LATER *********** */
 //        if all sensors on the left are true, turn left 90 degrees
-//        if (sensor.values[7] && sensor.values[6] && sensor.values[5] && sensor.values[4]) {
-//            turnLeft90(servo, servo2);
-//            moveStop(servo, servo2);
-//            moveForward(servo, servo2);
-//        }
-//
-//        //if all sensors on the right are true, turn right 90 degrees
-//        if (sensor.values[3] && sensor.values[2] && sensor.values[1] && sensor.values[0]) {
-//            turnRight90(servo, servo2);
-//            moveStop(servo, servo2);
-//            moveForward(servo, servo2);
-//        }
+        if (sensor.values[7] && sensor.values[6] && sensor.values[5] && sensor.values[4]) {
+            turnLeft90(servo, servo2);
+            moveStop(servo, servo2);
+            moveForward(servo, servo2);
+        }
+
+        //if all sensors on the right are true, turn right 90 degrees
+        if (sensor.values[3] && sensor.values[2] && sensor.values[1] && sensor.values[0]) {
+            turnRight90(servo, servo2);
+            moveStop(servo, servo2);
+            moveForward(servo, servo2);
+        }
 
         /* Turn on RED LED if sensor data is none across the board. */
         /* Move forward if there is no sensor data */
@@ -236,9 +241,9 @@ int main(void) {
             moveForward(servo, servo2);
 //            moveStop(servo, servo2);
         }
-        else if (sensor.values[3] && sensor.values[4]) {
-            moveForward(servo,servo2);
-        }
+//        else if (sensor.values[3] && sensor.values[4]) {
+//            moveForward(servo,servo2);
+//        }
         /* Turn on GREEN LED if sensor data is tending towards the left side. */
         /* Turn left if sensor data is towards left side */
         else if (avgSide >= 0x10) {
