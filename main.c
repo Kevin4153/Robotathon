@@ -118,6 +118,14 @@ int getLineResult(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
     //            avgSide += sensor.values[i] << i;
     //        }
 
+//    // detected
+//    int leftHalf = sensor.values[0]+sensor.values[1]+sensor.values[2]+sensor.values[3];
+//    int rightHalf = sensor.values[4]+sensor.values[5]+sensor.values[6]+sensor.values[7];
+//    if(leftHalf>=3 && rightHalf>=3){
+//        // at a cross confirmed
+//
+//
+//    }
     // detected left 90 degrees turn. move foward a little before returning direction
     // mostly for adjustment
     if(sensor.values[1] + sensor.values[0] == 2) return right90;
@@ -256,10 +264,11 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
         else if (frontSensor.value == 1) {
             turnLeft90(servo, servo2);
         }
-        /* if only the left sensor is detecting a wall, veer right a little bit */
-        else if (leftSensor.value == 1) {
-            turnRight(servo, servo2);
-        }
+//        /* if only the left sensor is detecting a wall, veer right a little bit */
+//        else if (leftSensor.value == 1) {
+//            global_delay = 50;
+//            turnRight(servo, servo2);
+//        }[[[
         else {
             moveForward(servo, servo2);
         }
@@ -271,43 +280,43 @@ int main(void) {
     PLLInit(BUS_80_MHZ);
     DisableInterrupts();
 
-    /* Front sensor initialization */
-    /* pin PE4 is associated with frontSensor */
-    DistanceSensorConfig_t frontSensConfig = {
-            .pin=AIN9,
-            .module=ADC_MODULE_0
-        };
-    DistanceSensor_t frontSensor = DistanceSensorInit(frontSensConfig);
+//    /* Front sensor initialization */
+//    /* pin PE4 is associated with frontSensor */
+//    DistanceSensorConfig_t frontSensConfig = {
+//            .pin=AIN9,
+//            .module=ADC_MODULE_0
+//        };
+//    DistanceSensor_t frontSensor = DistanceSensorInit(frontSensConfig);
+//
+//    /* Left sensor initialization */
+//    /* pin PB5 is associated with leftSensor */
+//    DistanceSensorConfig_t leftSensConfig = {
+//            .pin=AIN11,
+//            .module=ADC_MODULE_1
+//        };
+//    DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
+//
+    /*
+     * Initialize line sensor with 8 pins:
+     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
+     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
+     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
+     * line sensor pin1, pin 2, pin 3, ..... pin 8
+     *
+     *
+     */
+    LineSensorConfig_t lineSensConfig = {
+        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
+        .numPins=8,
+        .repeatFrequency=20,
+        .isThresholded=true,
+        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
+        .module=ADC_MODULE_1
+        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
+    };
 
-    /* Left sensor initialization */
-    /* pin PB5 is associated with leftSensor */
-    DistanceSensorConfig_t leftSensConfig = {
-            .pin=AIN11,
-            .module=ADC_MODULE_1
-        };
-    DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
-//
-//    /*
-//     * Initialize line sensor with 8 pins:
-//     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
-//     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
-//     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
-//     * line sensor pin1, pin 2, pin 3, ..... pin 8
-//     *
-//     *
-//     */
-//    LineSensorConfig_t lineSensConfig = {
-//        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
-//        .numPins=8,
-//        .repeatFrequency=20,
-//        .isThresholded=true,
-//        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
-//        .module=ADC_MODULE_1
-//        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
-//    };
-//
-//    /* Initialization of ADC */
-//        LineSensor_t sensor = LineSensorInit(lineSensConfig);
+    /* Initialization of ADC */
+        LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
     /* Red onboard LED. */
     GPIOConfig_t PF1Config = {
@@ -359,23 +368,23 @@ int main(void) {
     DelayMillisec(3000);
 
     while(1) {
-    distanceSensing(frontSensor, leftSensor, servo, servo2);
-//        int direction = getLineResult(sensor, servo, servo2);
-//
-//        switch(direction){
-//            case forward: moveForward(servo, servo2); break;
-//            case veerLeft: turnLeft(servo, servo2); break;
-//            case veerRight:turnRight(servo, servo2); break;
-//            case right90:
-//                moveForward_t(servo, servo2, forwardAdjustTime);
-//                turnRight90(servo, servo2);
-//                break;
-//            case left90:
-//                moveForward_t(servo, servo2, forwardAdjustTime);
-//                turnLeft90(servo, servo2);
-//                break;
-//            default: moveBackward(servo, servo2); break;
-//        }
+//    distanceSensing(frontSensor, leftSensor, servo, servo2);
+        int direction = getLineResult(sensor, servo, servo2);
+
+        switch(direction){
+            case forward: moveForward(servo, servo2); break;
+            case veerLeft: turnLeft(servo, servo2); break;
+            case veerRight:turnRight(servo, servo2); break;
+            case right90:
+                moveForward_t(servo, servo2, forwardAdjustTime);
+                turnRight90(servo, servo2);
+                break;
+            case left90:
+                moveForward_t(servo, servo2, forwardAdjustTime);
+                turnLeft90(servo, servo2);
+                break;
+            default: moveBackward(servo, servo2); break;
+        }
 
 
 
