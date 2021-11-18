@@ -39,7 +39,7 @@ void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, 35);
     ServoSetSpeed(servo2, 30);
-    DelayMillisec(5000);
+    DelayMillisec(1000);
 //    DelayMillisec(1000);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
@@ -245,8 +245,8 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
 
         /* convert int value of sensor into a boolean value */
         /* ********* FIGURE OUT THRESHOLD VALUE FOR WALL DETECTION *********** */
-        DistanceSensorGetBool(&frontSensor, 2048);
-        DistanceSensorGetBool(&leftSensor, 2048);
+        DistanceSensorGetBool(&frontSensor, 3900);
+        DistanceSensorGetBool(&leftSensor, 3900);
 
         /* if the front and left sensor are detecting a wall, turn right 90 degrees */
         if (frontSensor.value == 1 && leftSensor.value == 1) {
@@ -259,6 +259,9 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
         /* if only the left sensor is detecting a wall, veer right a little bit */
         else if (leftSensor.value == 1) {
             turnRight(servo, servo2);
+        }
+        else {
+            moveForward(servo, servo2);
         }
     }
 
@@ -280,31 +283,31 @@ int main(void) {
     /* pin PB5 is associated with leftSensor */
     DistanceSensorConfig_t leftSensConfig = {
             .pin=AIN11,
-            .module=ADC_MODULE_0
+            .module=ADC_MODULE_1
         };
     DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
-
-    /*
-     * Initialize line sensor with 8 pins:
-     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
-     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
-     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
-     * line sensor pin1, pin 2, pin 3, ..... pin 8
-     *
-     *
-     */
-    LineSensorConfig_t lineSensConfig = {
-        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
-        .numPins=8,
-        .repeatFrequency=20,
-        .isThresholded=true,
-        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
-        .module=ADC_MODULE_1
-        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
-    };
-
-    /* Initialization of ADC */
-        LineSensor_t sensor = LineSensorInit(lineSensConfig);
+//
+//    /*
+//     * Initialize line sensor with 8 pins:
+//     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
+//     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
+//     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
+//     * line sensor pin1, pin 2, pin 3, ..... pin 8
+//     *
+//     *
+//     */
+//    LineSensorConfig_t lineSensConfig = {
+//        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
+//        .numPins=8,
+//        .repeatFrequency=20,
+//        .isThresholded=true,
+//        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
+//        .module=ADC_MODULE_1
+//        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
+//    };
+//
+//    /* Initialization of ADC */
+//        LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
     /* Red onboard LED. */
     GPIOConfig_t PF1Config = {
@@ -348,7 +351,7 @@ int main(void) {
     global_delay = 50;
 
     //************* test script for motor **************
-    testMotorBehavior(sensor, servo, servo2);    // comment this out as needed
+//    testMotorBehavior(sensor, servo, servo2);    // comment this out as needed
     //**************************************************
 
     //wait a total of 5 seconds before starting
@@ -356,7 +359,7 @@ int main(void) {
     DelayMillisec(3000);
 
     while(1) {
-        moveForward(servo, servo2);
+    distanceSensing(frontSensor, leftSensor, servo, servo2);
 //        int direction = getLineResult(sensor, servo, servo2);
 //
 //        switch(direction){
