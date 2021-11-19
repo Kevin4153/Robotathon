@@ -37,6 +37,7 @@ void WaitForInterrupt(void);
 #define veerLeft    2
 #define veerRight   3
 #define right90     4
+#define stop        5
 
 #define distSens_thresh_front   3900
 #define distSens_thresh_left    3900
@@ -46,7 +47,7 @@ void WaitForInterrupt(void);
 
 /* Global Variables */
 int global_delay = 0; //delay used for motor movement times
-int game_mode = 1; //flag indicating which game mode we are in
+int game_mode = mode_wall; //flag indicating which game mode we are in
 
 void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // no led for stop
@@ -54,7 +55,7 @@ void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, 35);
     ServoSetSpeed(servo2, 30);
-    DelayMillisec(200);
+    DelayMillisec(1000);
 //    DelayMillisec(1000);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
@@ -138,14 +139,10 @@ int getLineResult(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
     //        }
 
 
-//    // detected
-//    int leftHalf = sensor.values[0]+sensor.values[1]+sensor.values[2]+sensor.values[3];
-//    int rightHalf = sensor.values[4]+sensor.values[5]+sensor.values[6]+sensor.values[7];
-//    if(leftHalf>=3 && rightHalf>=3){
-//        // at a cross confirmed
-//
-//
-//    }
+    // if detected line on most of left side and most of right side or a cross, stop motor
+    int leftHalf = sensor.values[0]+sensor.values[1]+sensor.values[2]+sensor.values[3];
+    int rightHalf = sensor.values[4]+sensor.values[5]+sensor.values[6]+sensor.values[7];
+    if(leftHalf>=3 && rightHalf>=3) return stop;
     // detected left 90 degrees turn. move forward a little before returning direction
     // mostly for adjustment
     if(sensor.values[1] + sensor.values[0] == 2) return right90;
@@ -263,10 +260,14 @@ void lineSensing (LineSensor_t sensor, PWM_t servo, PWM_t servo2) {
 }
 
 void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, PWM_t servo, PWM_t servo2) {
+    int safeZone_inner = 3950, safeZone_outter = 3850;
+    int leftDist = 0;
     while (1) {
         /* Read from front and left distance sensor */
         DistanceSensorGetInt(&frontSensor);
         DistanceSensorGetInt(&leftSensor);
+
+        leftDist = leftSensor.value;
 
         /* convert int value of sensor into a boolean value */
         /* ********* FIGURE OUT THRESHOLD VALUE FOR WALL DETECTION *********** */
@@ -287,7 +288,18 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
 //            turnRight(servo, servo2);
 //        }
         else {
-            moveForward(servo, servo2);
+            int time_adjustAmount = 50;             // CHANGE THIS AS WE CALIBRATE IDEAL DISTANCE
+            int oldDelay = global_delay;            // save the old global delay
+            /*if(leftDist > safeZone_inner){          // if too close for comfort, drift right
+                global_delay = time_adjustAmount;   // change the global delay to the needed amount for precise adjustment
+                turnRight(servo, servo2);
+            }
+            else if(leftDist < safeZone_outter){    // when too far from left wall, drift left
+                global_delay = time_adjustAmount;
+                turnLeft(servo, servo2);
+            }
+            else*/ moveForward(servo, servo2);
+            global_delay = oldDelay;                // restore the global delay
         }
     }
 
@@ -301,43 +313,43 @@ int main(void) {
     PLLInit(BUS_80_MHZ);
     DisableInterrupts();
 
-//    /* Front sensor initialization */
-//    /* pin PE4 is associated with frontSensor */
-//    DistanceSensorConfig_t frontSensConfig = {
-//            .pin=AIN9,
-//            .module=ADC_MODULE_0
-//        };
-//    DistanceSensor_t frontSensor = DistanceSensorInit(frontSensConfig);
+    /* Front sensor initialization */
+    /* pin PE4 is associated with frontSensor */
+    DistanceSensorConfig_t frontSensConfig = {
+            .pin=AIN9,
+            .module=ADC_MODULE_0
+        };
+    DistanceSensor_t frontSensor = DistanceSensorInit(frontSensConfig);
+
+    /* Left sensor initialization */
+    /* pin PB5 is associated with leftSensor */
+    DistanceSensorConfig_t leftSensConfig = {
+            .pin=AIN11,
+            .module=ADC_MODULE_1
+        };
+    DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
+
+//    /*
+//     * Initialize line sensor with 8 pins:
+//     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
+//     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
+//     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
+//     * line sensor pin1, pin 2, pin 3, ..... pin 8
+//     *
+//     *
+//     */
+//    LineSensorConfig_t lineSensConfig = {
+//        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
+//        .numPins=8,
+//        .repeatFrequency=20,
+//        .isThresholded=true,
+//        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
+//        .module=ADC_MODULE_1
+//        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
+//    };
 //
-//    /* Left sensor initialization */
-//    /* pin PB5 is associated with leftSensor */
-//    DistanceSensorConfig_t leftSensConfig = {
-//            .pin=AIN11,
-//            .module=ADC_MODULE_1
-//        };
-//    DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
-
-    /*
-     * Initialize line sensor with 8 pins:
-     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
-     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
-     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
-     * line sensor pin1, pin 2, pin 3, ..... pin 8
-     *
-     *
-     */
-    LineSensorConfig_t lineSensConfig = {
-        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
-        .numPins=8,
-        .repeatFrequency=20,
-        .isThresholded=true,
-        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
-        .module=ADC_MODULE_1
-        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
-    };
-
-    /* Initialization of ADC */
-        LineSensor_t sensor = LineSensorInit(lineSensConfig);
+//    /* Initialization of ADC */
+//        LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
     /* Red onboard LED. */
     GPIOConfig_t PF1Config = {
@@ -396,28 +408,30 @@ int main(void) {
  * Robot constantly moves forward unless it detects wall on left or
  *  in front and left.
  */
-//        if (game_mode == mode_wall) {
-//            distanceSensing(frontSensor, leftSensor, servo, servo2);
-//        }
-/*------------Line Sensing and Color Tiles------------*/
-        if (game_mode == mode_line) {
-            int direction = getLineResult(sensor, servo, servo2);
-
-            switch(direction){
-                case forward: moveForward(servo, servo2); break;
-                case veerLeft: turnLeft(servo, servo2); break;
-                case veerRight:turnRight(servo, servo2); break;
-                case right90:
-                    moveForward_t(servo, servo2, forwardAdjustTime);
-                    turnRight90(servo, servo2);
-                    break;
-                case left90:
-                    moveForward_t(servo, servo2, forwardAdjustTime);
-                    turnLeft90(servo, servo2);
-                    break;
-                default: moveBackward(servo, servo2); break;
-            }
+        if (game_mode == mode_wall) {
+            distanceSensing(frontSensor, leftSensor, servo, servo2);
         }
+/*------------Line Sensing and Color Tiles------------*/
+//        if (game_mode == mode_line) {
+//            int direction = getLineResult(sensor, servo, servo2);
+//
+//            switch(direction){
+//                case forward: moveForward(servo, servo2); break;
+//                case veerLeft: turnLeft(servo, servo2); break;
+//                case veerRight:turnRight(servo, servo2); break;
+//                case right90:
+//                    moveForward_t(servo, servo2, forwardAdjustTime);
+//                    turnRight90(servo, servo2);
+//                    break;
+//                case left90:
+//                    moveForward_t(servo, servo2, forwardAdjustTime);
+//                    turnLeft90(servo, servo2);
+//                    break;
+//                case stop:
+//                    moveStop(servo, servo2); break;
+//                default: moveBackward(servo, servo2); break;
+//            }
+//        }
 ///*------------Shooting Game------------*/
 //        if (game_mode == mode_shoot) {
 //
