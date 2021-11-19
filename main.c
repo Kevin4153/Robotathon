@@ -14,9 +14,9 @@ void EnableInterrupts(void);
 void DisableInterrupts(void);
 void WaitForInterrupt(void);
 
-#define led_red PIN_F1
-#define led_blue PIN_F2
-#define led_green PIN_F3
+#define led_red     PIN_F1
+#define led_blue    PIN_F2
+#define led_green   PIN_F3
 
 /*
  * flags for switching game modes:
@@ -24,27 +24,29 @@ void WaitForInterrupt(void);
  * mode_line = Dance Dance Revolution
  * mode_shoot = Duck Shooting Game
  */
-#define mode_wall 0
-#define mode_line 1
-#define mode_shoot 2
+#define mode_wall   0
+#define mode_line   1
+#define mode_shoot  2
 /*
  * red: forward, white: backward
  * green: sharp left, blue: sharp right
  * yellow: veer left, purple: veer right
  */
-#define forward 0
-#define left90 1
-#define veerLeft 2
-#define veerRight 3
-#define right90 4
+#define forward     0
+#define left90      1
+#define veerLeft    2
+#define veerRight   3
+#define right90     4
 
+#define distSens_thresh_front   3900
+#define distSens_thresh_left    3900
 
-#define forwardAdjustTime 200
-#define defaultAdjustTime 200
+#define forwardAdjustTime   200
+#define defaultAdjustTime   200
 
 /* Global Variables */
 int global_delay = 0; //delay used for motor movement times
-int game_mode = 0; //flag indicating which game mode we are in
+int game_mode = 1; //flag indicating which game mode we are in
 
 void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // no led for stop
@@ -268,8 +270,8 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
 
         /* convert int value of sensor into a boolean value */
         /* ********* FIGURE OUT THRESHOLD VALUE FOR WALL DETECTION *********** */
-        DistanceSensorGetBool(&frontSensor, 3900);
-        DistanceSensorGetBool(&leftSensor, 3900);
+        DistanceSensorGetBool(&frontSensor, distSens_thresh_front);
+        DistanceSensorGetBool(&leftSensor, distSens_thresh_left);
 
         /* if the front and left sensor are detecting a wall, turn right 90 degrees */
         if (frontSensor.value == 1 && leftSensor.value == 1) {
@@ -299,43 +301,43 @@ int main(void) {
     PLLInit(BUS_80_MHZ);
     DisableInterrupts();
 
-    /* Front sensor initialization */
-    /* pin PE4 is associated with frontSensor */
-    DistanceSensorConfig_t frontSensConfig = {
-            .pin=AIN9,
-            .module=ADC_MODULE_0
-        };
-    DistanceSensor_t frontSensor = DistanceSensorInit(frontSensConfig);
-
-    /* Left sensor initialization */
-    /* pin PB5 is associated with leftSensor */
-    DistanceSensorConfig_t leftSensConfig = {
-            .pin=AIN11,
-            .module=ADC_MODULE_1
-        };
-    DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
-
-//    /*
-//     * Initialize line sensor with 8 pins:
-//     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
-//     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
-//     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
-//     * line sensor pin1, pin 2, pin 3, ..... pin 8
-//     *
-//     *
-//     */
-//    LineSensorConfig_t lineSensConfig = {
-//        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
-//        .numPins=8,
-//        .repeatFrequency=20,
-//        .isThresholded=true,
-//        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
-//        .module=ADC_MODULE_1
-//        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
-//    };
+//    /* Front sensor initialization */
+//    /* pin PE4 is associated with frontSensor */
+//    DistanceSensorConfig_t frontSensConfig = {
+//            .pin=AIN9,
+//            .module=ADC_MODULE_0
+//        };
+//    DistanceSensor_t frontSensor = DistanceSensorInit(frontSensConfig);
 //
-//    /* Initialization of ADC */
-//        LineSensor_t sensor = LineSensorInit(lineSensConfig);
+//    /* Left sensor initialization */
+//    /* pin PB5 is associated with leftSensor */
+//    DistanceSensorConfig_t leftSensConfig = {
+//            .pin=AIN11,
+//            .module=ADC_MODULE_1
+//        };
+//    DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
+
+    /*
+     * Initialize line sensor with 8 pins:
+     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
+     * sensor.val[0], sensor.val[1], ..... sensor.val[7] =
+     * PE3, PE2, PE1, PE0, PD3, PD2, PD1, PE5 =
+     * line sensor pin1, pin 2, pin 3, ..... pin 8
+     *
+     *
+     */
+    LineSensorConfig_t lineSensConfig = {
+        .pins={AIN0, AIN1, AIN2, AIN3, AIN4, AIN5, AIN6, AIN7},
+        .numPins=8,
+        .repeatFrequency=20,
+        .isThresholded=true,
+        .threshold=2048, // This threshold corresponds to 2048 / 4095 * 3.3 V.
+        .module=ADC_MODULE_1
+        // Uses ADC Module 1, Sequencer 0, Timer 0A by default.
+    };
+
+    /* Initialization of ADC */
+        LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
     /* Red onboard LED. */
     GPIOConfig_t PF1Config = {
@@ -394,33 +396,33 @@ int main(void) {
  * Robot constantly moves forward unless it detects wall on left or
  *  in front and left.
  */
-        if (game_mode = mode_wall) {
-            distanceSensing(frontSensor, leftSensor, servo, servo2);
-        }
-/*------------Line Sensing and Color Tiles------------*/
-        if (game_mode = mode_line) {
-
-        }
-/*------------Shooting Game------------*/
-        if (game_mode = mode_shoot) {
-
-        }
-//        int direction = getLineResult(sensor, servo, servo2);
-//
-//        switch(direction){
-//            case forward: moveForward(servo, servo2); break;
-//            case veerLeft: turnLeft(servo, servo2); break;
-//            case veerRight:turnRight(servo, servo2); break;
-//            case right90:
-//                moveForward_t(servo, servo2, forwardAdjustTime);
-//                turnRight90(servo, servo2);
-//                break;
-//            case left90:
-//                moveForward_t(servo, servo2, forwardAdjustTime);
-//                turnLeft90(servo, servo2);
-//                break;
-//            default: moveBackward(servo, servo2); break;
+//        if (game_mode == mode_wall) {
+//            distanceSensing(frontSensor, leftSensor, servo, servo2);
 //        }
+/*------------Line Sensing and Color Tiles------------*/
+        if (game_mode == mode_line) {
+            int direction = getLineResult(sensor, servo, servo2);
+
+            switch(direction){
+                case forward: moveForward(servo, servo2); break;
+                case veerLeft: turnLeft(servo, servo2); break;
+                case veerRight:turnRight(servo, servo2); break;
+                case right90:
+                    moveForward_t(servo, servo2, forwardAdjustTime);
+                    turnRight90(servo, servo2);
+                    break;
+                case left90:
+                    moveForward_t(servo, servo2, forwardAdjustTime);
+                    turnLeft90(servo, servo2);
+                    break;
+                default: moveBackward(servo, servo2); break;
+            }
+        }
+///*------------Shooting Game------------*/
+//        if (game_mode == mode_shoot) {
+//
+//        }
+
 
 
 
