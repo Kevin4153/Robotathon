@@ -32,7 +32,6 @@ void WaitForInterrupt(void);
  * green: sharp left, blue: sharp right
  * yellow: veer left, purple: veer right
  */
-
 #define forward 0
 #define left90 1
 #define veerLeft 2
@@ -42,7 +41,10 @@ void WaitForInterrupt(void);
 
 #define forwardAdjustTime 200
 #define defaultAdjustTime 200
-int global_delay = 0;
+
+/* Global Variables */
+int global_delay = 0; //delay used for motor movement times
+int game_mode = 0; //flag indicating which game mode we are in
 
 void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // no led for stop
@@ -54,13 +56,12 @@ void moveStop(PWM_t servo, PWM_t servo2) {
 //    DelayMillisec(1000);
 }
 //one of the motors is weaker than the other, servo2 speed is less to compensate
-/* ************PERFECT MOVEFORWARD ************** */
 void moveForward(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 1); // red led for moving forward
     GPIOSetBit(led_blue, 0);
     GPIOSetBit(led_green, 0);
     ServoSetSpeed(servo, -80);     //left motor turns CCW -80
-    ServoSetSpeed(servo2, 100);      //right motor turns CW 100
+    ServoSetSpeed(servo2, 84);      //right motor turns CW 100
     DelayMillisec(global_delay);
 }
 
@@ -279,7 +280,7 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
             turnLeft90(servo, servo2);
         }
 //        /* if only the left sensor is detecting a wall, veer right a little bit */
-//        else if (leftSensor.value == 1) {
+//        if (leftSensor.value == 1) {
 //            global_delay = 50;
 //            turnRight(servo, servo2);
 //        }
@@ -310,7 +311,7 @@ int main(void) {
     /* pin PB5 is associated with leftSensor */
     DistanceSensorConfig_t leftSensConfig = {
             .pin=AIN11,
-            .module=ADC_MODULE_0
+            .module=ADC_MODULE_1
         };
     DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
 
@@ -382,13 +383,28 @@ int main(void) {
     //**************************************************
 
     //wait a total of 5 seconds before starting
-    moveStop(servo, servo2);
-    DelayMillisec(3000);
+//    moveStop(servo, servo2);
+//    DelayMillisec(3000);
 
     while(1) {
-        distanceSensing(frontSensor, leftSensor, servo, servo2);
-//        lineSensing (sensor, servo, servo2);
-//    distanceSensing(frontSensor, leftSensor, servo, servo2);
+
+/*------------Wall Detection Maze------------
+ * Make sure front and left sensor are using different ADC modules
+ * and that no other component is using them.
+ * Robot constantly moves forward unless it detects wall on left or
+ *  in front and left.
+ */
+        if (game_mode = mode_wall) {
+            distanceSensing(frontSensor, leftSensor, servo, servo2);
+        }
+/*------------Line Sensing and Color Tiles------------*/
+        if (game_mode = mode_line) {
+
+        }
+/*------------Shooting Game------------*/
+        if (game_mode = mode_shoot) {
+
+        }
 //        int direction = getLineResult(sensor, servo, servo2);
 //
 //        switch(direction){
