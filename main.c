@@ -28,7 +28,7 @@ void WaitForInterrupt(void);
 #define mode_line   1
 #define mode_shoot  2
 /*
- * red: forward, white: backward
+ * red: forward, white: shooting motor
  * green: sharp left, blue: sharp right
  * yellow: veer left, purple: veer right
  */
@@ -47,7 +47,7 @@ void WaitForInterrupt(void);
 
 /* Global Variables */
 int global_delay = 0; //delay used for motor movement times
-int game_mode = mode_wall; //flag indicating which game mode we are in
+int game_mode = mode_shoot; //flag indicating which game mode we are in
 
 void moveStop(PWM_t servo, PWM_t servo2) {
     GPIOSetBit(led_red, 0); // no led for stop
@@ -124,10 +124,27 @@ void turnRight90(PWM_t servo, PWM_t servo2) {
     DelayMillisec(505);
 }
 
-// ***********CHANGE THE SERVO TO THE THIRD SERVO FOR THE SHOOTY PART ******
-void shootMotor(PWM_t servo) {
-    ServoSetSpeed(servo, 100);
-    DelayMillisec(1000);
+// Releases rubber band that will propel the ping pong ball
+void shootMotorRelease(PWM_t servo3) {
+    GPIOSetBit(led_red, 1); // led white for shooting motor
+    GPIOSetBit(led_blue, 1);
+    GPIOSetBit(led_green, 1);
+    /* turn motor 90 degrees CCW */
+    ServoSetSpeed(servo3, 15);
+    DelayMillisec(380);
+    ServoSetSpeed(servo3, 100);
+
+}
+
+// Stops shooting motor from turning
+void shootMotorStop(PWM_t servo3) {
+    GPIOSetBit(led_red, 1); //led red for stopping
+    GPIOSetBit(led_blue, 0);
+    GPIOSetBit(led_green, 0);
+    ServoSetSpeed(servo3, 100);
+    DelayMillisec(5000);
+    ServoSetSpeed(servo3, 15);
+
 }
 int getLineResult(LineSensor_t sensor, PWM_t servo, PWM_t servo2){
     LineSensorGetIntArray(&sensor);
@@ -305,14 +322,17 @@ void distanceSensing(DistanceSensor_t frontSensor, DistanceSensor_t leftSensor, 
 
 }
 
-void shooting (PWM_t servo, PWM_t servo2) {
-
+void shooting (PWM_t servo3) {
+    while (1) {
+        shootMotorRelease(servo3);
+        shootMotorStop(servo3);
+    }
 }
 int main(void) {
 
     PLLInit(BUS_80_MHZ);
     DisableInterrupts();
-
+//------------Distance Sensor Init------------
     /* Front sensor initialization */
     /* pin PE4 is associated with frontSensor */
     DistanceSensorConfig_t frontSensConfig = {
@@ -329,6 +349,7 @@ int main(void) {
         };
     DistanceSensor_t leftSensor = DistanceSensorInit(leftSensConfig);
 
+//------------Line Sensor Init------------
 //    /*
 //     * Initialize line sensor with 8 pins:
 //     * linesensorconfig array ===AN0, AN1, AN2, ....AN7 =
@@ -351,6 +372,7 @@ int main(void) {
 //    /* Initialization of ADC */
 //        LineSensor_t sensor = LineSensorInit(lineSensConfig);
 
+//------------On-board LED Init------------
     /* Red onboard LED. */
     GPIOConfig_t PF1Config = {
         PIN_F1,
@@ -374,6 +396,7 @@ int main(void) {
     GPIOInit(PF2Config);
     GPIOInit(PF3Config);
 
+//------------Motor Init------------
     /* Left motor initialization */
     ServoConfig_t servo1Config = {
         .pin=PIN_B6,
@@ -383,10 +406,17 @@ int main(void) {
 
     /* Right motor initialization */
     ServoConfig_t servo2Config = {
-            .pin=PIN_B1,
-            .timerID=TIMER_1A
-        };
+        .pin=PIN_B1,
+        .timerID=TIMER_1A
+    };
     PWM_t servo2 = ServoInit(servo2Config);
+
+    /* Shooting motor initialization */
+    ServoConfig_t servo3Config = {
+        .pin=PIN_C4,
+        .timerID=TIMER_2A
+    };
+    PWM_t servo3 = ServoInit(servo3Config);
 
     DelayInit();
     EnableInterrupts();
@@ -408,9 +438,9 @@ int main(void) {
  * Robot constantly moves forward unless it detects wall on left or
  *  in front and left.
  */
-        if (game_mode == mode_wall) {
-            distanceSensing(frontSensor, leftSensor, servo, servo2);
-        }
+//        if (game_mode == mode_wall) {
+//            distanceSensing(frontSensor, leftSensor, servo, servo2);
+//        }
 /*------------Line Sensing and Color Tiles------------*/
 //        if (game_mode == mode_line) {
 //            int direction = getLineResult(sensor, servo, servo2);
@@ -432,10 +462,11 @@ int main(void) {
 //                default: moveBackward(servo, servo2); break;
 //            }
 //        }
-///*------------Shooting Game------------*/
-//        if (game_mode == mode_shoot) {
-//
-//        }
+
+/*------------Shooting Game------------*/
+        if (game_mode == mode_shoot) {
+            shooting(servo3);
+        }
 
 
 
